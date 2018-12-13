@@ -64,10 +64,15 @@ INCLUDE?=-I$(ROOT) -I$(ROOT)/targets -I$(ROOT)/src -I$(GENDIR)
 LIBS?=
 DEFINES?=
 CFLAGS?=-Wall -Wextra -Wconversion -Werror=implicit-function-declaration -fno-strict-aliasing -g
-LDFLAGS?=-Winline -g
+LDFLAGS?=-Winline -g -static
 OPTIMIZEFLAGS?=
 #-fdiagnostics-show-option - shows which flags can be used with -Werror
 DEFINES+=-DGIT_COMMIT=$(shell git log -1 --format="%h")
+
+TRACERCFLAGS=-static -finstrument-functions -DTRACER_BINARY_CHAINS
+TRACERLDFLAGS=-static
+CFLAGS+= $(TRACERCFLAGS)
+LDFLAGS+= $(TRACERLDFLAGS)
 
 ifeq ($(shell uname),Darwin)
 MACOSX=1
@@ -250,6 +255,9 @@ src/jswrap_stream.c \
 src/jswrap_string.c \
 src/jswrap_waveform.c \
 
+#
+TRACERSOURCES = tracer.c
+
 # it is important that _pin comes before stuff which uses
 # integers (as the check for int *includes* the chek for pin)
 SOURCES += \
@@ -269,7 +277,8 @@ src/jsi2c.c \
 src/jsserial.c \
 src/jsspi.c \
 src/jshardware_common.c \
-$(WRAPPERFILE)
+$(WRAPPERFILE) \
+$(TRACERSOURCES)
 CPPSOURCES =
 
 ifdef CFILE
